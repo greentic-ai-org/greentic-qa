@@ -7,12 +7,12 @@ use builder::{
     build_bundle, write_bundle,
 };
 use clap::{Parser, Subcommand, ValueEnum};
-use component_qa::{next as qa_next, render_card as qa_render_card, render_json_ui, submit_patch};
+use greentic_qa_lib::{I18nConfig, ResolvedI18nMap, WizardDriver, WizardFrontend, WizardRunConfig};
 use qa_spec::{
-    AnswerSet, FormSpec, ValidationResult, expr::Expr, spec::question::Constraint,
+    FormSpec, ValidationResult, expr::Expr, spec::question::Constraint,
     spec::validation::CrossFieldValidation, validate,
 };
-use serde_json::{Map, Number, Value, json};
+use serde_json::{Number, Value, json};
 use std::env;
 use std::fs;
 use std::io::{self, Write};
@@ -60,6 +60,15 @@ enum Command {
         /// Render output mode for the wizard display.
         #[arg(long, value_enum, default_value_t = RenderMode::Text)]
         format: RenderMode,
+        /// Locale used for i18n lookup (e.g. en-US).
+        #[arg(long, value_name = "LOCALE")]
+        locale: Option<String>,
+        /// Path to a JSON object map of resolved i18n keys to strings.
+        #[arg(long, value_name = "FILE")]
+        i18n_resolved: Option<PathBuf>,
+        /// Attach i18n debug metadata to rendered payloads.
+        #[arg(long)]
+        i18n_debug: bool,
     },
     /// Interactive form generator that creates a bundle of derived artifacts.
     New {
@@ -99,6 +108,17 @@ enum Command {
     },
 }
 
+struct WizardCliOptions {
+    spec_path: PathBuf,
+    answers_path: Option<PathBuf>,
+    verbose: bool,
+    answers_json: bool,
+    format: RenderMode,
+    locale: Option<String>,
+    i18n_resolved: Option<PathBuf>,
+    i18n_debug: bool,
+}
+
 fn main() -> CliResult<()> {
     let cli = Cli::parse();
     match cli.command {
@@ -108,7 +128,19 @@ fn main() -> CliResult<()> {
             verbose,
             answers_json,
             format,
-        } => run_wizard(spec, answers, verbose, answers_json, format),
+            locale,
+            i18n_resolved,
+            i18n_debug,
+        } => run_wizard(WizardCliOptions {
+            spec_path: spec,
+            answers_path: answers,
+            verbose,
+            answers_json,
+            format,
+            locale,
+            i18n_resolved,
+            i18n_debug,
+        }),
         Command::New {
             out,
             force,
@@ -409,7 +441,7 @@ fn run_generate(
 }
 
 fn run_validate(spec_path: PathBuf, answers_path: PathBuf) -> CliResult<()> {
-    let spec_json = fs::read_to_string(spec_path)?;
+    let spec_json = fs::read_to_string(&spec_path)?;
     let spec: FormSpec = serde_json::from_str(&spec_json)?;
     let answers_json = fs::read_to_string(answers_path)?;
     let answers: Value = serde_json::from_str(&answers_json)?;
@@ -550,61 +582,64 @@ fn canonicalize_target(path: &Path) -> CliResult<PathBuf> {
     Ok(cwd.join(path))
 }
 
-fn run_wizard(
-    spec_path: PathBuf,
-    answers_path: Option<PathBuf>,
-    verbose: bool,
-    answers_json: bool,
-    format: RenderMode,
-) -> CliResult<()> {
-    let spec_str = fs::read_to_string(&spec_path)?;
-    let spec_value: Value = serde_json::from_str(&spec_str)?;
-    let form_id = spec_value
-        .get("id")
-        .and_then(Value::as_str)
-        .ok_or("form spec is missing an id")?;
-    let form_id_owned = form_id.to_string();
-    let spec_version = spec_value
-        .get("version")
-        .and_then(Value::as_str)
-        .unwrap_or("0.0.0")
-        .to_string();
-    let config_json = json!({ "form_spec_json": spec_str }).to_string();
-
-    let mut answers = if let Some(path) = answers_path {
-        let contents = fs::read_to_string(path)?;
-        serde_json::from_str(&contents)?
+fn run_wizard(options: WizardCliOptions) -> CliResult<()> {
+    let spec_json = fs::read_to_string(options.spec_path)?;
+    let initial_answers_json = if let Some(path) = options.answers_path {
+        Some(fs::read_to_string(path)?)
     } else {
-        Value::Object(Map::new())
+        None
+    };
+    let resolved = if let Some(path) = options.i18n_resolved {
+        Some(load_resolved_i18n_map(&path)?)
+    } else {
+        None
     };
 
-    let mut presenter = WizardPresenter::new(Verbosity::from_verbose(verbose), answers_json);
+    let frontend = match options.format {
+        RenderMode::Text => WizardFrontend::Text,
+        RenderMode::Card => WizardFrontend::Card,
+        RenderMode::Json => WizardFrontend::JsonUi,
+    };
+
+    let config = WizardRunConfig {
+        spec_json,
+        initial_answers_json,
+        frontend,
+        i18n: I18nConfig {
+            locale: options.locale,
+            resolved,
+            debug: options.i18n_debug,
+        },
+        verbose: options.verbose,
+    };
+    let mut driver = WizardDriver::new(config)?;
+
+    let mut presenter = WizardPresenter::new(
+        Verbosity::from_verbose(options.verbose),
+        options.answers_json,
+    );
 
     loop {
-        let answers_str = answers.to_string();
-        let next_value = parse_component_result(&qa_next(form_id, &config_json, &answers_str))?;
-        if next_value["status"] == "complete" {
-            let answer_set = AnswerSet {
-                form_id: form_id_owned.clone(),
-                spec_version: spec_version.clone(),
-                answers: answers.clone(),
-                meta: None,
-            };
-            presenter.show_completion(&answer_set);
-            break;
-        }
-        let question_id = next_value["next_question_id"]
-            .as_str()
-            .ok_or("wizard failed to return a next question")?
+        let frontend_payload = driver.next_payload_json()?;
+        let ui_raw = driver
+            .last_ui_json()
+            .ok_or("wizard UI payload is unavailable")?
             .to_string();
+        let ui: Value = serde_json::from_str(&ui_raw)?;
+        print_render_output(options.format, &frontend_payload, Some(&ui_raw))?;
 
-        let ui_raw = render_json_ui(form_id, &config_json, "{}", &answers_str);
-        let ui = parse_component_result(&ui_raw)?;
-        print_render_output(format, form_id, &config_json, &answers_str, Some(&ui_raw))?;
         let payload =
             WizardPayload::from_json(&ui).map_err(|err| format!("wizard UI error: {}", err))?;
         presenter.show_header(&payload);
         presenter.show_status(&payload);
+
+        if payload.status == wizard::RenderStatus::Complete {
+            break;
+        }
+        let question_id = ui["next_question_id"]
+            .as_str()
+            .ok_or("wizard failed to return a next question")?
+            .to_string();
 
         let question = find_question(&ui, &question_id)?;
         let question_info = payload
@@ -613,15 +648,8 @@ fn run_wizard(
         let prompt = PromptContext::new(question_info, &payload.progress);
         let answer = prompt_question(&prompt, &question, &presenter)?;
 
-        let value_json = serde_json::to_string(&answer)?;
-        let submit_value = parse_component_result(&submit_patch(
-            form_id,
-            &config_json,
-            "{}",
-            &answers_str,
-            &question_id,
-            &value_json,
-        ))?;
+        let submit = driver.submit_patch_json(&json!({ question_id: answer }).to_string())?;
+        let submit_value: Value = serde_json::from_str(&submit.response_json)?;
         let validation = gather_validation_details(&submit_value);
 
         if submit_value["status"] == "error" {
@@ -633,30 +661,12 @@ fn run_wizard(
                 print_validation_errors(&validation)?;
             }
         }
-
-        answers = submit_value["answers"].clone();
-        if submit_value["status"] == "complete" {
-            let answer_set = AnswerSet {
-                form_id: form_id_owned.clone(),
-                spec_version: spec_version.clone(),
-                answers: answers.clone(),
-                meta: None,
-            };
-            presenter.show_completion(&answer_set);
-            break;
-        }
     }
+
+    let result = driver.finish()?;
+    presenter.show_completion(&result.answer_set);
 
     Ok(())
-}
-
-fn parse_component_result(response: &str) -> CliResult<Value> {
-    let value: Value = serde_json::from_str(response)?;
-    if let Some(error) = value.get("error").and_then(Value::as_str) {
-        Err(error.into())
-    } else {
-        Ok(value)
-    }
 }
 
 fn find_question(ui: &Value, question_id: &str) -> CliResult<Value> {
@@ -1536,28 +1546,41 @@ fn print_validation_errors(details: &ValidationDetails) -> CliResult<()> {
 
 fn print_render_output(
     mode: RenderMode,
-    form_id: &str,
-    config_json: &str,
-    answers_json: &str,
+    frontend_payload_json: &str,
     ui: Option<&str>,
 ) -> CliResult<()> {
     match mode {
         RenderMode::Text => Ok(()),
         RenderMode::Card => {
-            let card = qa_render_card(form_id, config_json, "{}", answers_json);
-            println!("Adaptive card:\n{}", card);
+            println!("Adaptive card:\n{}", frontend_payload_json);
             Ok(())
         }
         RenderMode::Json => {
             if let Some(ui) = ui {
                 println!("JSON UI:\n{}", ui);
             } else {
-                let json_ui = render_json_ui(form_id, config_json, "{}", answers_json);
-                println!("JSON UI:\n{}", json_ui);
+                println!("JSON UI:\n{}", frontend_payload_json);
             }
             Ok(())
         }
     }
+}
+
+fn load_resolved_i18n_map(path: &Path) -> CliResult<ResolvedI18nMap> {
+    let raw = fs::read_to_string(path)?;
+    let value: Value = serde_json::from_str(&raw)?;
+    let object = value
+        .as_object()
+        .ok_or("i18n-resolved must be a flat object map of string keys to string values.")?;
+
+    let mut map = ResolvedI18nMap::new();
+    for (key, value) in object {
+        let text = value
+            .as_str()
+            .ok_or("i18n-resolved must be a flat object map of string keys to string values.")?;
+        map.insert(key.clone(), text.to_string());
+    }
+    Ok(map)
 }
 
 #[cfg(test)]
@@ -1682,6 +1705,19 @@ mod tests {
             parse_answer(&question, "").unwrap(),
             Value::String("default-value".into())
         );
+    }
+
+    #[test]
+    fn load_resolved_i18n_map_requires_flat_string_map() {
+        let dir = TempDir::new().expect("temp dir");
+        let valid = dir.path().join("valid.json");
+        fs::write(&valid, r#"{"q1.title":"Naam"}"#).expect("write valid");
+        let loaded = load_resolved_i18n_map(&valid).expect("flat map should load");
+        assert_eq!(loaded.get("q1.title").map(String::as_str), Some("Naam"));
+
+        let invalid = dir.path().join("invalid.json");
+        fs::write(&invalid, r#"{"q1":{"title":"Naam"}}"#).expect("write invalid");
+        assert!(load_resolved_i18n_map(&invalid).is_err());
     }
 
     const FIXTURE: &str = include_str!("../../../ci/fixtures/sample_form_generation.json");

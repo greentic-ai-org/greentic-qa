@@ -375,9 +375,14 @@ pub fn validate_answers(form_id: &str, config_json: &str, answers_json: &str) ->
     respond(validation)
 }
 
-pub fn next(form_id: &str, config_json: &str, answers_json: &str) -> String {
+pub fn next_with_ctx(
+    form_id: &str,
+    config_json: &str,
+    ctx_json: &str,
+    answers_json: &str,
+) -> String {
     let result = ensure_form(form_id, config_json).map(|spec| {
-        let ctx = parse_runtime_context(config_json);
+        let ctx = parse_runtime_context(ctx_json);
         let answers = parse_answers(answers_json);
         let visibility = resolve_visibility(&spec, &answers, VisibilityMode::Visible);
         let progress_ctx = ProgressContext::new(answers.clone(), &ctx);
@@ -394,6 +399,10 @@ pub fn next(form_id: &str, config_json: &str, answers_json: &str) -> String {
         })
     });
     respond(result)
+}
+
+pub fn next(form_id: &str, config_json: &str, answers_json: &str) -> String {
+    next_with_ctx(form_id, config_json, "{}", answers_json)
 }
 
 pub fn apply_store(form_id: &str, ctx_json: &str, answers_json: &str) -> String {

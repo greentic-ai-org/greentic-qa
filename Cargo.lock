@@ -177,7 +177,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "component-qa"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "qa-spec",
  "serde",
@@ -406,16 +406,28 @@ dependencies = [
 
 [[package]]
 name = "greentic-qa"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "assert_cmd",
  "assert_fs",
  "clap",
  "component-qa",
+ "greentic-qa-lib",
  "qa-spec",
  "serde",
  "serde_json",
  "tempfile",
+]
+
+[[package]]
+name = "greentic-qa-lib"
+version = "0.4.4"
+dependencies = [
+ "component-qa",
+ "qa-spec",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
@@ -661,7 +673,7 @@ dependencies = [
 
 [[package]]
 name = "qa-spec"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "globset",
  "handlebars",
@@ -884,9 +896,9 @@ dependencies = [
 
 [[package]]
 name = "tempfile"
-version = "3.25.0"
+version = "3.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0136791f7c95b1f6dd99f9cc786b91bb81c3800b639b3478e561ddb7be95e5f1"
+checksum = "82a72c767771b47409d2345987fda8628641887d5466101319899796367354a0"
 dependencies = [
  "fastrand",
  "getrandom",
