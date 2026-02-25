@@ -16,7 +16,7 @@ pub struct FormPresentation {
 }
 
 /// Execution policies shared by question navigation.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, JsonSchema, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ProgressPolicy {
     #[serde(default)]
     pub skip_answered: bool,
@@ -24,6 +24,16 @@ pub struct ProgressPolicy {
     pub autofill_defaults: bool,
     #[serde(default)]
     pub treat_default_as_answered: bool,
+}
+
+impl Default for ProgressPolicy {
+    fn default() -> Self {
+        Self {
+            skip_answered: true,
+            autofill_defaults: false,
+            treat_default_as_answered: false,
+        }
+    }
 }
 
 /// Secrets policy for the form.

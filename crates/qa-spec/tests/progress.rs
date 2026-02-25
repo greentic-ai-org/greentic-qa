@@ -89,3 +89,17 @@ fn next_question_skips_answered() {
         Some("q2".into())
     );
 }
+
+#[test]
+fn default_progress_policy_skips_answered() {
+    let mut spec = build_progress_form();
+    spec.progress_policy = None;
+    let answers = json!({ "q1": "value" });
+    let ctx = json!({});
+    let visibility = resolve_visibility(&spec, &answers, VisibilityMode::Visible);
+    let progress_ctx = ProgressContext::new(answers.clone(), &ctx);
+    assert_eq!(
+        next_question(&spec, &progress_ctx, &visibility),
+        Some("q2".into())
+    );
+}
