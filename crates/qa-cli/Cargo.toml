@@ -6,8 +6,8 @@ rust-version.workspace = true
 authors = ["Greentic AI <dev@greentic.ai>"]
 description = "Command line helper for QA workflows."
 license = "MIT"
-repository = "https://github.com/greentic-ai/greentic-qa"
-homepage = "https://github.com/greentic-ai/greentic-qa"
+repository = "https://github.com/greenticai/greentic-qa"
+homepage = "https://github.com/greenticai/greentic-qa"
 
 [dependencies]
 serde = { workspace = true }
@@ -26,3 +26,4 @@ tempfile = { workspace = true }
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ version }-{ target }.tar.gz"
 bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "tgz"
+

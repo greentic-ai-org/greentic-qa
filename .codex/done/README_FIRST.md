@@ -1,7 +1,7 @@
 # Greentic QA — PR Bundle
 
 Date: 2026-01-23  
-Repo: `greentic-ai/greentic-qa`  
+Repo: `greenticai/greentic-qa`  
 Scope: New repo containing `component-qa` + `qa-cli` + `qa-spec` + `qa-wizard` deployable gtpack.
 
 This bundle contains *detailed* PR plans intended for Codex-driven implementation.
@@ -43,4 +43,5 @@ greentic-qa/
 - **Secrets** are **default deny**; any read/write requires explicit policy + allowlist.
 
 ---
+
 

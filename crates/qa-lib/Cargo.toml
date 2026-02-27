@@ -6,8 +6,8 @@ rust-version.workspace = true
 authors = ["Greentic AI <dev@greentic.ai>"]
 description = "Reusable orchestration facade for Greentic QA wizard flows."
 license = "MIT"
-repository = "https://github.com/greentic-ai/greentic-qa"
-homepage = "https://github.com/greentic-ai/greentic-qa"
+repository = "https://github.com/greenticai/greentic-qa"
+homepage = "https://github.com/greenticai/greentic-qa"
 
 [dependencies]
 qa-spec = { workspace = true }
@@ -15,3 +15,4 @@ component-qa = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+
