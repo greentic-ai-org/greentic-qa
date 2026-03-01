@@ -1065,6 +1065,62 @@ fn mode_title(mode: NormalizedMode) -> (&'static str, &'static str) {
     }
 }
 
+fn bootstrap_path_question() -> Question {
+    Question {
+        id: "qa_form_asset_path".to_string(),
+        label: I18nText::new(
+            "qa.field.qa_form_asset_path.label",
+            Some(crate::i18n::t("en", "qa.field.qa_form_asset_path.label")),
+        ),
+        help: Some(I18nText::new(
+            "qa.field.qa_form_asset_path.help",
+            Some(crate::i18n::t("en", "qa.field.qa_form_asset_path.help")),
+        )),
+        error: None,
+        kind: QuestionKind::Text,
+        required: true,
+        default: None,
+    }
+}
+
+fn bootstrap_spec(mode: NormalizedMode) -> ComponentQaSpec {
+    let (title_key, description_key) = mode_title(mode);
+    let mut questions = Vec::new();
+    if mode != NormalizedMode::Remove {
+        questions.push(bootstrap_path_question());
+    }
+
+    ComponentQaSpec {
+        mode: mode.to_qa_mode(),
+        title: I18nText::new(title_key, Some(crate::i18n::t("en", title_key))),
+        description: Some(I18nText::new(
+            description_key,
+            Some(crate::i18n::t("en", description_key)),
+        )),
+        questions,
+        defaults: BTreeMap::new(),
+    }
+}
+
+fn should_fallback_to_bootstrap(mode: NormalizedMode, err: &ComponentError) -> bool {
+    if mode == NormalizedMode::Remove {
+        return false;
+    }
+    matches!(
+        err,
+        ComponentError::MissingQaFormAssetPath | ComponentError::QaFormRead { .. }
+    )
+}
+
+fn answered_bootstrap_path(answers: &Value) -> Option<String> {
+    let raw = answers.get("qa_form_asset_path")?.as_str()?;
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    Some(trimmed.to_string())
+}
+
 fn question_kind(question: &qa_spec::QuestionSpec) -> QuestionKind {
     match question.kind {
         QuestionType::Boolean => QuestionKind::Bool,
@@ -1203,6 +1259,9 @@ pub fn qa_spec_json(mode: NormalizedMode, payload: &Value) -> Value {
     let answers = payload_answers(payload);
     match component_qa_spec(mode, &form_id, &config_json, &ctx_json, &answers) {
         Ok(spec) => serde_json::to_value(spec).unwrap_or_else(|_| json!({})),
+        Err(err) if should_fallback_to_bootstrap(mode, &err) => {
+            serde_json::to_value(bootstrap_spec(mode)).unwrap_or_else(|_| json!({}))
+        }
         Err(err) => json!({
             "mode": mode.as_str(),
             "title": {"key": "qa.error.spec_unavailable", "default": "QA unavailable"},
@@ -1241,6 +1300,32 @@ pub fn apply_answers(mode: NormalizedMode, payload: &Value) -> Value {
         .get("current_config")
         .cloned()
         .unwrap_or_else(|| json!({}));
+    let bootstrap_path = answered_bootstrap_path(&answers);
+
+    if let Some(qa_form_asset_path) = bootstrap_path {
+        let mut config = match current_config {
+            Value::Object(map) => map,
+            _ => Map::new(),
+        };
+        config.insert(
+            "qa_form_asset_path".to_string(),
+            Value::String(qa_form_asset_path),
+        );
+        return json!({
+            "ok": true,
+            "config": config,
+            "warnings": [],
+            "errors": [],
+            "meta": {
+                "mode": mode.as_str(),
+                "version": "v1"
+            },
+            "audit": {
+                "reasons": ["qa.apply_answers"],
+                "timings_ms": {}
+            }
+        });
+    }
 
     match ensure_form(&form_id, &config_json) {
         Ok(spec) => {

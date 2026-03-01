@@ -1,12 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-use component_qa::qa::{NormalizedMode, apply_answers, qa_spec_json};
+use component_qa::qa::{NormalizedMode, apply_answers, normalize_mode, qa_spec_json};
 use serde_json::{Value, json};
 use tempfile::TempDir;
-
-const MISSING_CONFIG_MESSAGE: &str =
-    "No QA form configured. Create one with `greentic-qa new` and reference its asset path.";
 
 fn env_lock() -> &'static Mutex<()> {
     static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -80,21 +77,100 @@ fn qa_form_asset_path_loads_real_form_instead_of_placeholder() {
 }
 
 #[test]
-fn missing_qa_form_asset_path_fails_fast_with_guidance() {
+fn missing_qa_form_asset_path_returns_bootstrap_question_for_setup() {
     let payload = json!({
         "form_id": "support-form"
     });
     let spec = qa_spec_json(NormalizedMode::Setup, &payload);
+    let questions = spec
+        .get("questions")
+        .and_then(Value::as_array)
+        .expect("questions");
+    assert_eq!(questions.len(), 1);
     assert_eq!(
-        spec.pointer("/description/default").and_then(Value::as_str),
-        Some(MISSING_CONFIG_MESSAGE)
+        questions[0].get("id").and_then(Value::as_str),
+        Some("qa_form_asset_path")
     );
     assert_eq!(
-        spec.pointer("/questions")
-            .and_then(Value::as_array)
-            .map(|list| list.len()),
-        Some(0)
+        questions[0].pointer("/label/key").and_then(Value::as_str),
+        Some("qa.field.qa_form_asset_path.label")
     );
+    assert_eq!(
+        questions[0]
+            .pointer("/label/fallback")
+            .and_then(Value::as_str),
+        Some("Questions JSON asset path")
+    );
+    assert_eq!(
+        questions[0].pointer("/help/key").and_then(Value::as_str),
+        Some("qa.field.qa_form_asset_path.help")
+    );
+}
+
+#[test]
+fn missing_qa_form_asset_path_returns_bootstrap_question_for_update() {
+    let payload = json!({
+        "form_id": "support-form"
+    });
+    let spec = qa_spec_json(NormalizedMode::Update, &payload);
+    assert_eq!(
+        spec.pointer("/questions/0/id").and_then(Value::as_str),
+        Some("qa_form_asset_path")
+    );
+}
+
+#[test]
+fn default_setup_update_modes_all_ask_i18n_bootstrap_path_question() {
+    let payload = json!({
+        "form_id": "support-form"
+    });
+    for raw_mode in ["default", "setup", "update"] {
+        let mode = normalize_mode(raw_mode).expect("normalized mode");
+        let spec = qa_spec_json(mode, &payload);
+        assert_eq!(
+            spec.pointer("/questions/0/id").and_then(Value::as_str),
+            Some("qa_form_asset_path"),
+            "mode={raw_mode}"
+        );
+        assert_eq!(
+            spec.pointer("/questions/0/label/key")
+                .and_then(Value::as_str),
+            Some("qa.field.qa_form_asset_path.label"),
+            "mode={raw_mode}"
+        );
+        assert_eq!(
+            spec.pointer("/questions/0/help/key")
+                .and_then(Value::as_str),
+            Some("qa.field.qa_form_asset_path.help"),
+            "mode={raw_mode}"
+        );
+    }
+}
+
+#[test]
+fn default_setup_update_modes_save_bootstrap_path_answer_into_config() {
+    let payload = json!({
+        "form_id": "support-form",
+        "answers": {
+            "qa_form_asset_path": "qa/forms/support.form.json"
+        }
+    });
+    for raw_mode in ["default", "setup", "update"] {
+        let mode = normalize_mode(raw_mode).expect("normalized mode");
+        let result = apply_answers(mode, &payload);
+        assert_eq!(
+            result.get("ok").and_then(Value::as_bool),
+            Some(true),
+            "mode={raw_mode}"
+        );
+        assert_eq!(
+            result
+                .pointer("/config/qa_form_asset_path")
+                .and_then(Value::as_str),
+            Some("qa/forms/support.form.json"),
+            "mode={raw_mode}"
+        );
+    }
 }
 
 #[test]
