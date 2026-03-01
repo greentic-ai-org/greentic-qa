@@ -1008,6 +1008,14 @@ fn payload_config_json(payload: &Value) -> String {
     if let Some(config) = payload.get("config") {
         return config.to_string();
     }
+    if let Some(current_config) = payload.get("current_config") {
+        if let Some(raw) = current_config.as_str()
+            && let Ok(parsed) = serde_json::from_str::<Value>(raw)
+        {
+            return parsed.to_string();
+        }
+        return current_config.to_string();
+    }
     let mut config = Map::new();
     if let Some(qa_form_asset_path) = payload.get("qa_form_asset_path") {
         config.insert("qa_form_asset_path".to_string(), qa_form_asset_path.clone());
@@ -1028,6 +1036,12 @@ fn payload_answers(payload: &Value) -> Value {
             return serde_json::from_str(raw).unwrap_or_else(|_| Value::Object(Map::new()));
         }
         return answers.clone();
+    }
+    if let Some(current_config) = payload.get("current_config") {
+        if let Some(raw) = current_config.as_str() {
+            return serde_json::from_str(raw).unwrap_or_else(|_| Value::Object(Map::new()));
+        }
+        return current_config.clone();
     }
     Value::Object(Map::new())
 }

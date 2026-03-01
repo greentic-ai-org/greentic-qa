@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-use component_qa::qa::{NormalizedMode, qa_spec_json};
+use component_qa::qa::{NormalizedMode, apply_answers, qa_spec_json};
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
@@ -179,5 +179,77 @@ fn golden_generated_form_uses_locale_and_en_fallback() {
             .pointer("/help/fallback")
             .and_then(Value::as_str),
         Some("Enable after setup")
+    );
+}
+
+#[test]
+fn qa_spec_uses_current_config_for_setup_and_update() {
+    let _guard = lock_env();
+    let assets = setup_generated_assets();
+    // Guarded by process-wide mutex to avoid concurrent env mutation across tests.
+    unsafe { std::env::set_var("QA_FORM_ASSET_BASE", assets.path()) };
+
+    let payload = json!({
+        "form_id": "support-form",
+        "current_config": {
+            "qa_form_asset_path": "qa/forms/support.form.json"
+        },
+        "ctx": {
+            "locale": "en"
+        }
+    });
+
+    let setup_spec = qa_spec_json(NormalizedMode::Setup, &payload);
+    let update_spec = qa_spec_json(NormalizedMode::Update, &payload);
+
+    assert_eq!(
+        setup_spec
+            .get("questions")
+            .and_then(Value::as_array)
+            .map(|questions| questions.len()),
+        Some(2)
+    );
+    assert_eq!(
+        update_spec
+            .get("questions")
+            .and_then(Value::as_array)
+            .map(|questions| questions.len()),
+        Some(2)
+    );
+}
+
+#[test]
+fn apply_answers_uses_current_config_and_returns_non_empty_config() {
+    let _guard = lock_env();
+    let assets = setup_generated_assets();
+    // Guarded by process-wide mutex to avoid concurrent env mutation across tests.
+    unsafe { std::env::set_var("QA_FORM_ASSET_BASE", assets.path()) };
+
+    let payload = json!({
+        "form_id": "support-form",
+        "current_config": {
+            "qa_form_asset_path": "qa/forms/support.form.json"
+        },
+        "answers": {
+            "api_key": "sk_test_123",
+            "enabled": true
+        }
+    });
+    let result = apply_answers(NormalizedMode::Setup, &payload);
+
+    assert_eq!(result.get("ok").and_then(Value::as_bool), Some(true));
+    assert_eq!(
+        result
+            .pointer("/config/qa_form_asset_path")
+            .and_then(Value::as_str),
+        Some("qa/forms/support.form.json")
+    );
+    assert_eq!(
+        result.pointer("/config/api_key").and_then(Value::as_str),
+        Some("sk_test_123")
+    );
+    assert_eq!(
+        result.pointer("/config/enabled").and_then(Value::as_bool),
+        Some(true)
     );
 }
