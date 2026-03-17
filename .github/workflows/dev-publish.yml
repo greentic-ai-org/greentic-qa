@@ -1,4 +1,4 @@
-﻿name: Dev Publish crates (qa)
+name: Dev Publish crates (qa)
 
 on:
   push:
