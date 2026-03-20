@@ -8,7 +8,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.4.11"
+version = "0.4.12"
 edition = "2024"
 license = "MIT"
 rust-version = "1.91"
@@ -34,3 +34,4 @@ assert_cmd = "2"
 assert_fs = "1"
 greentic-types = "0.4"
 wit-bindgen = { version = "0.54", default-features = false }
+greentic-interfaces-guest = { version = "0.4", default-features = false }

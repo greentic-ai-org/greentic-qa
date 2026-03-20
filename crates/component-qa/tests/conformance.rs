@@ -8,6 +8,7 @@ fn describe_mentions_world() {
         json["component"]["world"],
         "greentic:component/component@0.6.0"
     );
+    assert_eq!(json["component"]["self_describing"], true);
 }
 
 #[test]
