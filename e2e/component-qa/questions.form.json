@@ -1,0 +1,39 @@
+{
+  "id": "component-qa-e2e",
+  "title": "Component QA E2E",
+  "version": "0.1.0",
+  "description": "Minimal form fixture for component-qa wizard replay.",
+  "presentation": {
+    "intro": "Used by the component-qa e2e fixture."
+  },
+  "progress_policy": {
+    "skip_answered": true,
+    "autofill_defaults": false,
+    "treat_default_as_answered": false
+  },
+  "secrets_policy": null,
+  "store": [],
+  "validations": [],
+  "includes": [],
+  "questions": [
+    {
+      "id": "message",
+      "type": "string",
+      "title": "Message",
+      "description": "Message sent to the configured component step.",
+      "required": true,
+      "choices": null,
+      "default_value": "hello from e2e",
+      "secret": false,
+      "visible_if": null,
+      "constraint": null,
+      "list": null,
+      "policy": {
+        "persist": true,
+        "redact_in_summaries": false
+      },
+      "computed": null,
+      "computed_overridable": false
+    }
+  ]
+}

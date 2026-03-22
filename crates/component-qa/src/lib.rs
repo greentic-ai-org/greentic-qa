@@ -46,6 +46,21 @@ impl node::Guest for Component {
             capabilities: Vec::new(),
             ops: vec![
                 node::Op {
+                    name: "run".to_string(),
+                    summary: Some("Compatibility alias for handle_message".to_string()),
+                    input: node::IoSchema {
+                        schema: node::SchemaSource::InlineCbor(input_schema_cbor.clone()),
+                        content_type: "application/cbor".to_string(),
+                        schema_version: None,
+                    },
+                    output: node::IoSchema {
+                        schema: node::SchemaSource::InlineCbor(output_schema_cbor.clone()),
+                        content_type: "application/cbor".to_string(),
+                        schema_version: None,
+                    },
+                    examples: Vec::new(),
+                },
+                node::Op {
                     name: "handle_message".to_string(),
                     summary: Some("Handle a single message input".to_string()),
                     input: node::IoSchema {

@@ -262,7 +262,7 @@ checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 
 [[package]]
 name = "component-qa"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "greentic-interfaces-guest",
  "greentic-types",
@@ -586,7 +586,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-qa"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "assert_cmd",
  "assert_fs",
@@ -601,7 +601,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-qa-lib"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "component-qa",
  "qa-spec",
@@ -918,7 +918,7 @@ dependencies = [
 
 [[package]]
 name = "qa-spec"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "globset",
  "handlebars",

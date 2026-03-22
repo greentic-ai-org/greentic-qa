@@ -44,7 +44,7 @@
     ],
     "type": "object"
   },
-  "default_operation": "handle_message",
+  "default_operation": "run",
   "describe_export": "describe",
   "dev_flows": {
     "custom": {
@@ -72,7 +72,7 @@
             ]
           },
           "emit_config": {
-            "template": "{\n  \"node_id\": \"component-qa\",\n  \"node\": {\n    \"handle_message\": {\n      \"input\": {\n        \"input\": \"{{state.input}}\"\n      }\n    },\n    \"routing\": [\n      { \"to\": \"NEXT_NODE_PLACEHOLDER\" }\n    ]\n  }\n}"
+            "template": "{\n  \"node_id\": \"component-qa\",\n  \"node\": {\n    \"run\": {\n      \"input\": {\n        \"input\": \"{{state.input}}\"\n      }\n    },\n    \"routing\": [\n      { \"to\": \"NEXT_NODE_PLACEHOLDER\" }\n    ]\n  }\n}"
           }
         }
       }
@@ -85,7 +85,7 @@
         "kind": "component-config",
         "nodes": {
           "emit_config": {
-            "template": "{\n  \"node_id\": \"component-qa\",\n  \"node\": {\n    \"handle_message\": {\n      \"input\": {\n        \"input\": \"Hello from component-qa!\"\n      }\n    },\n    \"routing\": [\n      { \"to\": \"NEXT_NODE_PLACEHOLDER\" }\n    ]\n  }\n}"
+            "template": "{\n  \"node_id\": \"component-qa\",\n  \"node\": {\n    \"run\": {\n      \"input\": {\n        \"input\": \"Hello from component-qa!\"\n      }\n    },\n    \"routing\": [\n      { \"to\": \"NEXT_NODE_PLACEHOLDER\" }\n    ]\n  }\n}"
           }
         }
       }
@@ -101,6 +101,39 @@
   },
   "name": "component-qa",
   "operations": [
+    {
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "input": {
+            "default": "Hello from component-qa!",
+            "description": "Opaque payload forwarded to handle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "component-qa handle input",
+        "type": "object"
+      },
+      "name": "run",
+      "output_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "message": {
+            "default": "Handled by component-qa",
+            "description": "Response returned by the handle entry point",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "component-qa handle output",
+        "type": "object"
+      }
+    },
     {
       "input_schema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",

@@ -142,9 +142,34 @@ jobs:
           name: release-${{ matrix.target }}
           path: ${{ env.ARCHIVE_NAME }}
 
+  package_e2e_fixtures:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        run: |
+          VERSION=$(awk -F'\"' '/^version = \"/{print $2; exit}' Cargo.toml)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Package e2e fixtures
+        run: |
+          set -euo pipefail
+          ARCHIVE_NAME="greentic-qa-e2e-${VERSION}.tar.gz"
+          tar -czf "$ARCHIVE_NAME" e2e
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload e2e artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-e2e
+          path: ${{ env.ARCHIVE_NAME }}
+
   publish_release_assets:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
-    needs: [publish_crates, build_release_artifacts]
+    needs: [publish_crates, build_release_artifacts, package_e2e_fixtures]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
