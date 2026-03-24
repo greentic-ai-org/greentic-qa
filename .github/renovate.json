@@ -1,0 +1,13 @@
+﻿{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "baseBranches": ["develop"],
+  "labels": ["dependencies", "renovate"],
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "matchManagers": ["cargo"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ]
+}
