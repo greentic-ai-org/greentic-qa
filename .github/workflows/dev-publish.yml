@@ -54,6 +54,9 @@ jobs:
       - name: Compute version
         id: gitversion
         uses: gittools/actions/gitversion/execute@v1
+        with:
+          useConfigFile: true
+          configFilePath: GitVersion.yml
       - name: Set crate dev version
         run: |
           VERSION="${{ steps.gitversion.outputs.MajorMinorPatch }}-dev.${{ github.run_number }}"

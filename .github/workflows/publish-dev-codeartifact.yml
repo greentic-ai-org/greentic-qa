@@ -22,6 +22,9 @@ jobs:
 
       - id: gitversion
         uses: gittools/actions/gitversion/execute@v3
+        with:
+          useConfigFile: true
+          configFilePath: GitVersion.yml
 
       - uses: dtolnay/rust-toolchain@stable
 

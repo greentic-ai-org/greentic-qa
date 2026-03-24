@@ -1,0 +1,15 @@
+mode: ContinuousDeployment
+next-version: 0.4.14
+branches:
+  develop:
+    regex: ^develop$
+    label: dev
+    increment: Patch
+  master:
+    regex: ^master$
+    label: ""
+    increment: Patch
+  main:
+    regex: ^main$
+    label: ""
+    increment: Patch
