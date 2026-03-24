@@ -2,7 +2,7 @@ name: Component QA CI
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: ["main"]
   pull_request:
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
         run: cargo build -p component-qa --target wasm32-wasip2 --release
 
       - name: Prepare publish artifacts
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         run: |
           cp target/wasm32-wasip2/release/component_qa.wasm component_qa.wasm
           cp component.manifest.json component.publish.manifest.json
@@ -65,17 +65,17 @@ jobs:
           ls -l component_qa.wasm component.publish.manifest.json
 
       - name: Install ORAS
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         uses: oras-project/setup-oras@v1
 
       - name: Login to GHCR
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: echo "${GITHUB_TOKEN}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Push OCI artifact to GHCR
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         env:
           IMAGE: ghcr.io/${{ env.GHCR_OWNER }}/components/component-qa
         run: |
