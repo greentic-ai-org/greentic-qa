@@ -8,7 +8,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.4.10"
+version = "0.4.10-dev.20260320002303"
 edition = "2024"
 license = "MIT"
 rust-version = "1.91"
@@ -17,9 +17,9 @@ homepage = "https://github.com/greentic-ai/greentic-qa"
 description = "Greentic QA tooling (component-qa, greentic-qa, qa-spec) for adaptive wizard flows."
 
 [workspace.dependencies]
-qa-spec = { path = "crates/qa-spec", version = "0.4" }
-component-qa = { path = "crates/component-qa", version = "0.4" }
-greentic-qa-lib = { path = "crates/qa-lib", version = "0.4" }
+qa-spec = { path = "crates/qa-spec", version = ">=0.4.10-0, <0.6.0" }
+component-qa = { path = "crates/component-qa", version = ">=0.4.10-0, <0.6.0" }
+greentic-qa-lib = { path = "crates/qa-lib", version = ">=0.4.10-0, <0.6.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_cbor = "0.11"
@@ -32,5 +32,6 @@ clap = { version = "4", features = ["derive"] }
 tempfile = "3"
 assert_cmd = "2"
 assert_fs = "1"
-greentic-types = "0.4"
+greentic-types = ">=0.4.0-0, <0.5.0"
 wit-bindgen = { version = "0.53", default-features = false }
+
