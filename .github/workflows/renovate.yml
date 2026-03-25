@@ -24,4 +24,3 @@ jobs:
           RENOVATE_PLATFORM: github
           RENOVATE_AUTODISCOVER: false
           RENOVATE_REPOSITORIES: ${{ github.repository }}
-          RENOVATE_BASE_BRANCHES: develop,release
