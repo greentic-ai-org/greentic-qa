@@ -2,24 +2,18 @@
 
 Date (UTC): 2026-03-25
 Branch: `ci/add-workflow-permissions`
-Commit Reviewed: `ffbfa6a`
+Commit Reviewed: `de9c74c`
 
 ## Inputs Reviewed
 
-- `security-alerts.json`
-- `dependabot-alerts.json`
-- `code-scanning-alerts.json`
-- `pr-vulnerable-changes.json`
-
-## Findings
-
-- Dependabot alerts: `0`
-- Code scanning alerts: `0`
-- New PR dependency vulnerabilities: `0`
+- Security alerts JSON:
+  - Dependabot alerts: `0`
+  - Code scanning alerts: `0`
+- New PR dependency vulnerabilities list: `0`
 
 ## PR Dependency Change Check
 
-Dependency manifests/lockfiles present in the repo:
+Dependency manifests/lockfiles detected in repository:
 
 - `Cargo.toml`
 - `Cargo.lock`
@@ -28,17 +22,24 @@ Dependency manifests/lockfiles present in the repo:
 - `crates/qa-lib/Cargo.toml`
 - `crates/qa-spec/Cargo.toml`
 
-Changed files in PR range (`origin/main...HEAD`):
+Files changed in PR range (`origin/main...HEAD`):
 
 - `.github/workflows/ci.yml`
+- `.github/workflows/dev-publish.yml`
 - `.github/workflows/nightly-e2e.yml`
+- `SECURITY_FIX_REPORT.md`
+- `pr-comment.md`
 
 Result: no dependency manifest or lockfile changes were introduced by this PR.
 
 ## Remediation Actions
 
-No code or dependency fixes were required. No vulnerabilities were identified in the provided security alert inputs, and no new dependency vulnerabilities were introduced by PR dependency changes.
+No dependency or source-code remediation was required because no vulnerabilities were reported in the provided alert inputs and no new dependency vulnerabilities were listed for this PR.
+
+## Validation Notes
+
+Attempted to run Rust advisory tooling (`cargo audit`, `cargo deny check advisories`) for defense-in-depth validation, but execution is blocked in this CI sandbox due to read-only Rustup temp path permissions.
 
 ## Files Modified
 
-- `SECURITY_FIX_REPORT.md` (updated)
+- `SECURITY_FIX_REPORT.md` (updated for current run)
