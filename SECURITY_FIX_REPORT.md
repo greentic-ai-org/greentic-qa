@@ -1,8 +1,8 @@
 # Security Fix Report
 
-Date (UTC): 2026-03-23
-Branch: `chore/delete-nested-dead-workflows`
-Commit Reviewed: `31dec13`
+Date (UTC): 2026-03-25
+Branch: `ci/add-workflow-permissions`
+Commit Reviewed: `ffbfa6a`
 
 ## Inputs Reviewed
 
@@ -19,7 +19,7 @@ Commit Reviewed: `31dec13`
 
 ## PR Dependency Change Check
 
-Checked dependency manifests/lockfiles in the repository:
+Dependency manifests/lockfiles present in the repo:
 
 - `Cargo.toml`
 - `Cargo.lock`
@@ -28,12 +28,17 @@ Checked dependency manifests/lockfiles in the repository:
 - `crates/qa-lib/Cargo.toml`
 - `crates/qa-spec/Cargo.toml`
 
-Result: no dependency manifest/lockfile changes in `HEAD~1..HEAD`.
+Changed files in PR range (`origin/main...HEAD`):
+
+- `.github/workflows/ci.yml`
+- `.github/workflows/nightly-e2e.yml`
+
+Result: no dependency manifest or lockfile changes were introduced by this PR.
 
 ## Remediation Actions
 
-No remediation changes were required because no vulnerabilities were present in the provided alerts and no new dependency vulnerabilities were introduced by this PR.
+No code or dependency fixes were required. No vulnerabilities were identified in the provided security alert inputs, and no new dependency vulnerabilities were introduced by PR dependency changes.
 
 ## Files Modified
 
-- `SECURITY_FIX_REPORT.md` (added)
+- `SECURITY_FIX_REPORT.md` (updated)
