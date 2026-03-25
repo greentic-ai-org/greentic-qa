@@ -60,9 +60,6 @@ jobs:
           VERSION="${{ steps.gitversion.outputs.majorMinorPatch }}-dev.${{ github.run_number }}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           sed -i -E "s/^version\s*=\s*\".*\"/version = \"${VERSION}\"/" Cargo.toml
-          sed -i -E "s#^qa-spec\\s*=.*#qa-spec = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
-          sed -i -E "s#^component-qa\\s*=.*#component-qa = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
-          sed -i -E "s#^greentic-qa-lib\\s*=.*#greentic-qa-lib = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
           echo "Publishing version: ${VERSION}"
           grep '^version\s*=\s*' Cargo.toml
 
