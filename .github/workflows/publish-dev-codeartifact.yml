@@ -70,6 +70,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
 
           publish_one() {
             local crate="$1"
@@ -109,6 +110,9 @@ jobs:
           }
 
           publish_one qa-spec
+          sed -i -E "s#^qa-spec\\s*=.*#qa-spec = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
+          sed -i -E "s#^component-qa\\s*=.*#component-qa = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
+          sed -i -E "s#^greentic-qa-lib\\s*=.*#greentic-qa-lib = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
           publish_one component-qa
           publish_one greentic-qa-lib
 
