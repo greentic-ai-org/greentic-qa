@@ -112,9 +112,8 @@ jobs:
 
           publish_one qa-spec crates/qa-spec/Cargo.toml
           sed -i -E "s#^qa-spec\\s*=.*#qa-spec = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
-          sed -i -E "s#^component-qa\\s*=.*#component-qa = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
-          sed -i -E "s#^greentic-qa-lib\\s*=.*#greentic-qa-lib = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
           publish_one component-qa crates/component-qa/Cargo.toml
+          sed -i -E "s#^component-qa\\s*=.*#component-qa = { version = \"=${VERSION}\", registry = \"corp-artifacts-greentic\" }#" Cargo.toml
           publish_one greentic-qa-lib crates/qa-lib/Cargo.toml
 
       - name: Create git tag only after successful publish
