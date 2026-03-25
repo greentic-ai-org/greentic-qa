@@ -5,6 +5,10 @@ branches:
     regex: ^develop$
     label: dev
     increment: Patch
+  release:
+    regex: ^release$
+    label: ""
+    increment: Patch
   master:
     regex: ^master$
     label: ""
