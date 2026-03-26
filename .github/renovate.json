@@ -3,10 +3,21 @@
   "baseBranches": ["develop", "release"],
   "labels": ["dependencies", "renovate"],
   "extends": ["config:base"],
+  "platformAutomerge": true,
+  "automergeType": "pr",
+  "prCreation": "immediate",
+  "rebaseWhen": "never",
   "packageRules": [
     {
       "matchManagers": ["cargo"],
       "matchBaseBranches": ["develop"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchManagers": ["cargo"],
+      "matchBaseBranches": ["release"],
+      "ignoreUnstable": true,
       "automerge": true,
       "automergeType": "pr"
     }
