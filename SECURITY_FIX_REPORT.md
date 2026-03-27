@@ -1,8 +1,8 @@
 # Security Fix Report
 
-Date (UTC): 2026-03-26
-Branch: `chore/shared-ci-template`
-Commit Reviewed: `8ced6c7`
+Date (UTC): 2026-03-27
+Branch: `chore/shared-codex-security-fix`
+Commit Reviewed: `319c240`
 
 ## Inputs Reviewed
 
@@ -24,7 +24,7 @@ Dependency manifests/lockfiles present in repository:
 
 Files changed in reviewed PR commit range (`HEAD~1..HEAD`):
 
-- `.github/workflows/ci.yml`
+- `.github/workflows/codex-security-fix.yml`
 
 Result: no dependency manifest or lockfile changes were introduced by this PR.
 
@@ -41,12 +41,12 @@ Reason:
 
 ## Validation Notes
 
-Attempted defense-in-depth advisory checks:
-
-- `cargo audit -q`
-- `cargo deny check advisories`
-
-Both commands failed in this CI sandbox because Rustup could not write temporary files under `/home/runner/.rustup/tmp` (read-only filesystem).
+- Reviewed repository vulnerability input artifacts:
+  - `security-alerts.json`
+  - `dependabot-alerts.json`
+  - `code-scanning-alerts.json`
+  - `pr-vulnerable-changes.json`
+- All were empty for this run.
 
 ## Files Modified
 
