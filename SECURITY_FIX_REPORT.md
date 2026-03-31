@@ -1,27 +1,36 @@
 # Security Fix Report
 
-Date: 2026-03-30 (UTC)
-Branch: feat/codeql
+## Scope
+- Date: 2026-03-31 (UTC)
+- Reviewer role: Security Reviewer (CI)
+- Inputs reviewed:
+  - Provided security alerts JSON
+  - PR changed files list
+  - Repository dependency manifest/lockfile changes
 
-## Inputs Reviewed
-- Dependabot alerts: `[]`
-- Code scanning alerts: `[]`
-- New PR dependency vulnerabilities: `[]`
+## Alerts Analysis
+- Dependabot alerts: **0**
+- Code scanning alerts: **0**
+- New PR dependency vulnerabilities: **0**
 
-## PR Dependency File Review
-Checked changed files against `origin/main` using:
-- `git diff --name-only origin/main...HEAD`
+No actionable security alerts were present in the supplied data.
 
-Result:
-- Only `.github/workflows/codeql.yml` is changed.
-- No dependency manifest or lockfile changes were detected.
+## PR Dependency Review
+- PR changed files (`pr-changed-files.txt`):
+  - `.github/workflows/ci.yml`
+- Dependency files detected in repository:
+  - `Cargo.toml`
+  - `Cargo.lock`
+  - `crates/qa-spec/Cargo.toml`
+  - `crates/component-qa/Cargo.toml`
+  - `crates/qa-lib/Cargo.toml`
+  - `crates/qa-cli/Cargo.toml`
+- Dependency manifest/lockfile changes in current diff: **none**
 
-## Remediation Actions
-- No vulnerabilities were present in the provided alerts.
-- No new dependency vulnerabilities were present in this PR.
-- No code or dependency fixes were required.
+Conclusion: No new dependency vulnerability risk introduced by this PR based on changed files.
 
-## Final Security Status
-- `dependabot`: no open alerts in provided input.
-- `code_scanning`: no open alerts in provided input.
-- PR dependency delta: no vulnerable dependency changes detected.
+## Remediation Actions Taken
+- No code or dependency fixes were applied because no vulnerabilities were identified.
+
+## Residual Risk
+- None identified from the provided alert feeds and PR dependency diff review.

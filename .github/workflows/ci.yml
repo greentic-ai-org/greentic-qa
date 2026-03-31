@@ -11,3 +11,6 @@ permissions:
 jobs:
   ci:
     uses: greenticai/.github/.github/workflows/host-crate-ci.yml@main
+    with:
+      run-semver-checks: true
+      semver-checks-package: "qa-spec,greentic-qa-lib,greentic-qa"
