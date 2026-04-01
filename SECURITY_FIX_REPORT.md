@@ -1,37 +1,25 @@
-# Security Fix Report
+# SECURITY_FIX_REPORT
 
-## Scope
+## Run Metadata
 - Date: 2026-04-01 (UTC)
-- Reviewer role: Security Reviewer (CI)
-- Inputs reviewed:
-  - Provided security alerts JSON
-  - New PR dependency vulnerabilities list
-  - PR changed files list
-  - Repository dependency manifests/lockfiles
+- Role: Security Reviewer (CI)
+- Repository: `greentic-qa`
 
-## Alerts Analysis
-- Dependabot alerts: **0**
-- Code scanning alerts: **0**
-- New PR dependency vulnerabilities: **0**
+## Input Alerts Reviewed
+- Provided security alerts JSON:
+  - `dependabot`: 0 alerts
+  - `code_scanning`: 0 alerts
+- `dependabot-alerts.json`: 0 alerts
+- `code-scanning-alerts.json`: 0 alerts
+- `security-alerts.json`: 0 alerts in both categories
 
-No actionable security alerts were present in the supplied data.
+## Analysis
+No Dependabot or code scanning findings were present in the provided inputs. There were no vulnerable packages, code patterns, or alert instances to remediate.
 
-## PR Dependency Review
-- PR changed files (`pr-changed-files.txt`):
-  - `.github/workflows/codex-semver-fix.yml`
-- Dependency files detected in repository:
-  - `Cargo.toml`
-  - `Cargo.lock`
-  - `crates/qa-spec/Cargo.toml`
-  - `crates/component-qa/Cargo.toml`
-  - `crates/qa-lib/Cargo.toml`
-  - `crates/qa-cli/Cargo.toml`
-- Dependency manifest/lockfile changes in PR changed files: **none**
+## Remediation Actions
+- No code changes were required.
+- No dependency upgrades were required.
+- No configuration hardening changes were required.
 
-Conclusion: No new dependency vulnerability risk was introduced by this PR based on the changed-file set and provided vulnerability inputs.
-
-## Remediation Actions Taken
-- No code or dependency fixes were applied because no vulnerabilities were identified.
-
-## Residual Risk
-- None identified from the provided alert feeds and PR dependency review.
+## Result
+Security review completed with no actionable vulnerabilities detected from the supplied alert feeds.
