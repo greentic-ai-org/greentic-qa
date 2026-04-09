@@ -1,15 +1,17 @@
 name: Publish
 
 on:
-  workflow_run:
-    workflows:
-      - CI
-    types:
-      - completed
+  push:
+    branches: [main]
+  workflow_dispatch: {}
 
 permissions:
   contents: write
   packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -20,8 +22,11 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   publish_crates:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
+    needs: ci
     runs-on: ubuntu-latest
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
@@ -78,20 +83,30 @@ jobs:
           done
 
   build_release_artifacts:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
+    needs: ci
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
-          - os: windows-latest
+            arch: x64
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            arch: arm64
+          - os: windows-2025
             target: x86_64-pc-windows-msvc
-          - os: macos-15
+            arch: x64
+          - os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            arch: arm64
+          - os: macos-15-intel
             target: x86_64-apple-darwin
+            arch: x64
           - os: macos-15
             target: aarch64-apple-darwin
+            arch: arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,6 +121,7 @@ jobs:
         run: cargo build --release -p greentic-qa --target ${{ matrix.target }} --locked
 
       - name: Package binary
+        shell: bash
         run: |
           set -euo pipefail
           VERSION=$(awk -F'\"' '/^version = \"/{print $2; exit}' Cargo.toml)
@@ -131,9 +147,33 @@ jobs:
           name: release-${{ matrix.target }}
           path: ${{ env.ARCHIVE_NAME }}
 
+  package_e2e_fixtures:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        run: |
+          VERSION=$(awk -F'\"' '/^version = \"/{print $2; exit}' Cargo.toml)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Package e2e fixtures
+        run: |
+          set -euo pipefail
+          ARCHIVE_NAME="greentic-qa-e2e-${VERSION}.tar.gz"
+          tar -czf "$ARCHIVE_NAME" e2e
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload e2e artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-e2e
+          path: ${{ env.ARCHIVE_NAME }}
+
   publish_release_assets:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
-    needs: [publish_crates, build_release_artifacts]
+    needs: [publish_crates, build_release_artifacts, package_e2e_fixtures]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -159,7 +199,6 @@ jobs:
             artifacts/**/*.tar.gz
 
   binstall_matrix:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
     needs: [publish_release_assets]
     runs-on: ${{ matrix.os }}
     env:
@@ -168,13 +207,19 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             arch: x64
             target: x86_64-unknown-linux-gnu
-          - os: windows-latest
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            target: aarch64-unknown-linux-gnu
+          - os: windows-2025
             arch: x64
             target: x86_64-pc-windows-msvc
-          - os: macos-15
+          - os: windows-11-arm
+            arch: arm64
+            target: aarch64-pc-windows-msvc
+          - os: macos-15-intel
             arch: x64
             target: x86_64-apple-darwin
           - os: macos-15
@@ -204,7 +249,7 @@ jobs:
         run: bash ci/scripts/binstall_verify.sh
 
   smoke:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
+    needs: ci
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

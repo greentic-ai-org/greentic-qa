@@ -8,12 +8,12 @@ members = [
 ]
 
 [workspace.package]
-version = "0.4.10-dev.20260320002303"
+version = "0.4.14"
 edition = "2024"
 license = "MIT"
 rust-version = "1.91"
-repository = "https://github.com/greentic-ai/greentic-qa"
-homepage = "https://github.com/greentic-ai/greentic-qa"
+repository = "https://github.com/greenticai/greentic-qa"
+homepage = "https://github.com/greenticai/greentic-qa"
 description = "Greentic QA tooling (component-qa, greentic-qa, qa-spec) for adaptive wizard flows."
 
 [workspace.dependencies]
@@ -33,5 +33,5 @@ tempfile = "3"
 assert_cmd = "2"
 assert_fs = "1"
 greentic-types = ">=0.4.0-0, <0.5.0"
-wit-bindgen = { version = "0.53", default-features = false }
-
+wit-bindgen = { version = "0.54", default-features = false }
+greentic-interfaces-guest = { version = ">=0.4.0-0, <0.5.0", default-features = false }
