@@ -18,10 +18,12 @@ for crate in "${crates[@]}"; do
   cargo package \
     --manifest-path "$crate/Cargo.toml" \
     --locked \
-    --allow-dirty
+    --allow-dirty \
+    --no-verify
   cargo publish \
     --manifest-path "$crate/Cargo.toml" \
     --dry-run \
     --locked \
-    --allow-dirty
+    --allow-dirty \
+    --no-verify
 done

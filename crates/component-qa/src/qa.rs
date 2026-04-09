@@ -1080,6 +1080,7 @@ fn bootstrap_path_question() -> Question {
         kind: QuestionKind::Text,
         required: true,
         default: None,
+        skip_if: None,
     }
 }
 
@@ -1237,6 +1238,7 @@ fn component_qa_spec(
                 kind: question_kind(question),
                 required: question.required,
                 default: None,
+                skip_if: None,
             }
         })
         .collect();

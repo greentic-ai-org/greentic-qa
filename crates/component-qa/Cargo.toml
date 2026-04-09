@@ -22,9 +22,11 @@ world = "greentic:component/component@0.6.0"
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_cbor = { workspace = true }
 thiserror = { workspace = true }
 qa-spec = { workspace = true }
 greentic-types = { workspace = true }
+greentic-interfaces-guest = { workspace = true, features = ["component-v0-6"] }
 
 [build-dependencies]
 serde_json = { workspace = true }
@@ -33,6 +35,3 @@ greentic-types = { workspace = true }
 [dev-dependencies]
 serde_json = { workspace = true }
 tempfile = { workspace = true }
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wit-bindgen = { workspace = true, features = ["macros", "realloc"] }
