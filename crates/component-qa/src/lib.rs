@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 #[cfg(target_arch = "wasm32")]
 use greentic_interfaces_guest::component_v0_6::node;
 #[cfg(target_arch = "wasm32")]
+use greentic_interfaces_guest::component_v0_6::{component_i18n, component_qa};
+#[cfg(target_arch = "wasm32")]
 use greentic_types::cbor::canonical;
 #[cfg(target_arch = "wasm32")]
 use greentic_types::schemas::common::schema_ir::{AdditionalProperties, SchemaIr};
@@ -167,7 +169,45 @@ impl node::Guest for Component {
 }
 
 #[cfg(target_arch = "wasm32")]
-greentic_interfaces_guest::export_component_v060!(Component);
+impl component_qa::Guest for Component {
+    fn qa_spec(mode: component_qa::QaMode) -> Vec<u8> {
+        let mode = normalized_mode_from_qa_mode(mode);
+        let payload = qa::qa_spec_json(mode, &json!({ "form_id": "component-qa" }));
+        encode_cbor(&payload)
+    }
+
+    fn apply_answers(
+        mode: component_qa::QaMode,
+        current_config: Vec<u8>,
+        answers: Vec<u8>,
+    ) -> Vec<u8> {
+        let payload = json!({
+            "mode": normalized_mode_from_qa_mode(mode).as_str(),
+            "current_config": canonical::from_cbor(&current_config).unwrap_or_else(|_| json!({})),
+            "answers": canonical::from_cbor(&answers).unwrap_or_else(|_| json!({})),
+        });
+        let result = qa::apply_answers(normalized_mode_from_qa_mode(mode), &payload);
+        let config = result
+            .get("config")
+            .cloned()
+            .unwrap_or_else(|| payload["current_config"].clone());
+        encode_cbor(&config)
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl component_i18n::Guest for Component {
+    fn i18n_keys() -> Vec<String> {
+        qa::i18n_keys()
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+greentic_interfaces_guest::export_component_v060!(
+    Component,
+    component_qa: Component,
+    component_i18n: Component,
+);
 
 pub fn describe_payload() -> String {
     serde_json::json!({
@@ -359,6 +399,15 @@ fn normalized_mode(payload: &serde_json::Value) -> qa::NormalizedMode {
         .or_else(|| payload.get("operation").and_then(|v| v.as_str()))
         .unwrap_or("setup");
     qa::normalize_mode(mode).unwrap_or(qa::NormalizedMode::Setup)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn normalized_mode_from_qa_mode(mode: component_qa::QaMode) -> qa::NormalizedMode {
+    match mode {
+        component_qa::QaMode::Default | component_qa::QaMode::Setup => qa::NormalizedMode::Setup,
+        component_qa::QaMode::Update => qa::NormalizedMode::Update,
+        component_qa::QaMode::Remove => qa::NormalizedMode::Remove,
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
