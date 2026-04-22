@@ -17,9 +17,9 @@ homepage = "https://github.com/greenticai/greentic-qa"
 description = "Greentic QA tooling (component-qa, greentic-qa, qa-spec) for adaptive wizard flows."
 
 [workspace.dependencies]
-qa-spec = { path = "crates/qa-spec", version = "0.5" }
-component-qa = { path = "crates/component-qa", version = "0.5" }
-greentic-qa-lib = { path = "crates/qa-lib", version = "0.5" }
+qa-spec = { path = "crates/qa-spec", version = ">=0.5.0-0, <0.6.0" }
+component-qa = { path = "crates/component-qa", version = ">=0.5.0-0, <0.6.0" }
+greentic-qa-lib = { path = "crates/qa-lib", version = ">=0.5.0-0, <0.6.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_cbor = "0.11"
@@ -32,6 +32,6 @@ clap = { version = "4", features = ["derive"] }
 tempfile = "3"
 assert_cmd = "2"
 assert_fs = "1"
-greentic-types = "0.5"
+greentic-types = ">=0.5.0-0, <0.6.0"
 wit-bindgen = { version = "0.54", default-features = false }
-greentic-interfaces-guest = { version = "0.5", default-features = false }
+greentic-interfaces-guest = { version = ">=0.5.0-0, <0.6.0", default-features = false }
