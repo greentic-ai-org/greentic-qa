@@ -73,6 +73,9 @@ enum Command {
         /// Attach i18n debug metadata to rendered payloads.
         #[arg(long)]
         i18n_debug: bool,
+        /// Deployment environment scoping this wizard run (A10 seam).
+        #[arg(long, value_name = "ENV_ID", default_value = "local")]
+        env: String,
     },
     /// Interactive form generator that creates a bundle of derived artifacts.
     New {
@@ -121,6 +124,7 @@ struct WizardCliOptions {
     locale: Option<String>,
     i18n_resolved: Option<PathBuf>,
     i18n_debug: bool,
+    env_id: String,
 }
 
 fn main() -> CliResult<()> {
@@ -138,6 +142,7 @@ fn main() -> CliResult<()> {
             format,
             i18n_resolved,
             i18n_debug,
+            env,
         } => run_wizard(WizardCliOptions {
             spec_path: spec,
             answers_path: answers,
@@ -147,6 +152,7 @@ fn main() -> CliResult<()> {
             locale: cli.locale,
             i18n_resolved,
             i18n_debug,
+            env_id: env,
         }),
         Command::New {
             out,
@@ -675,6 +681,7 @@ fn run_wizard(options: WizardCliOptions) -> CliResult<()> {
             debug: options.i18n_debug,
         },
         verbose: options.verbose,
+        env_id: options.env_id,
     };
     let mut driver = WizardDriver::new(config)?;
 
