@@ -29,6 +29,13 @@ pub struct WizardRunConfig {
     pub frontend: WizardFrontend,
     pub i18n: I18nConfig,
     pub verbose: bool,
+    /// Identifier of the deployment environment scoping this wizard run.
+    ///
+    /// Consumers persist answers under `~/.greentic/environments/<env_id>/…`
+    /// and route secret-marked answers through that env's secrets pack
+    /// ([`SecretsSink`]). qa-lib itself does not persist; it only captures
+    /// `env_id` so callers can read it back via [`WizardDriver::env_id`].
+    pub env_id: String,
 }
 
 #[derive(Clone, Debug)]
@@ -57,6 +64,59 @@ pub enum QaLibError {
     MissingField(String),
     #[error("validation failed: {0}")]
     Validation(String),
+    #[error("secrets sink error: {0}")]
+    SecretsSink(String),
+}
+
+/// Reference to a secret stored outside the persisted answer set.
+///
+/// Returned by [`SecretsSink::try_route`] when a value is offloaded to the
+/// env's secrets pack. Consumers write the [`SecretRef`] (as a URI string)
+/// into their persisted answers in place of the plaintext value.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SecretRef {
+    pub uri: String,
+}
+
+/// Sink for secret-marked answers (A10 seam; Phase D handler backs it).
+///
+/// Consumers (the four legacy wizard runtimes) call [`try_route`] when they
+/// persist answers. `Ok(None)` keeps today's inline behavior; `Ok(Some(ref))`
+/// substitutes the ref for the plaintext. The trait lives in qa-lib so all
+/// consumers share one type; the wire-up to the env's secrets pack handler
+/// lives in Phase D.
+///
+/// [`try_route`]: SecretsSink::try_route
+pub trait SecretsSink: Send + Sync {
+    /// Route a secret-marked answer to the env's secrets pack.
+    ///
+    /// Return `Ok(None)` to leave the answer inline (today's behavior, what
+    /// [`NoopSecretsSink`] does). Return `Ok(Some(ref))` once a real
+    /// handler is wired up in Phase D.
+    fn try_route(
+        &self,
+        env_id: &str,
+        question_id: &str,
+        value: &Value,
+    ) -> Result<Option<SecretRef>, QaLibError>;
+}
+
+/// [`SecretsSink`] that preserves today's behavior — never offloads.
+///
+/// The seam default. Consumers swap it for a handler-backed impl when
+/// Phase D lands env-pack behavior.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct NoopSecretsSink;
+
+impl SecretsSink for NoopSecretsSink {
+    fn try_route(
+        &self,
+        _env_id: &str,
+        _question_id: &str,
+        _value: &Value,
+    ) -> Result<Option<SecretRef>, QaLibError> {
+        Ok(None)
+    }
 }
 
 pub struct QaRunner;
@@ -118,6 +178,7 @@ pub struct WizardDriver {
     answers: Value,
     complete: bool,
     last_ui_json: Option<String>,
+    env_id: String,
     _asset_dir: TempDir,
 }
 
@@ -152,6 +213,7 @@ impl WizardDriver {
             answers,
             complete: false,
             last_ui_json: None,
+            env_id: config.env_id,
             _asset_dir: asset_dir,
         })
     }
@@ -262,6 +324,11 @@ impl WizardDriver {
 
     pub fn last_ui_json(&self) -> Option<&str> {
         self.last_ui_json.as_deref()
+    }
+
+    /// Identifier of the deployment environment scoping this wizard run.
+    pub fn env_id(&self) -> &str {
+        &self.env_id
     }
 
     pub fn finish(self) -> Result<WizardRunResult, QaLibError> {
