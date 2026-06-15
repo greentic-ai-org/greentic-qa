@@ -159,6 +159,12 @@ fn prefix_expr(expr: Expr, prefix: &str) -> Expr {
             left: Box::new(prefix_expr(*left, prefix)),
             right: Box::new(prefix_expr(*right, prefix)),
         },
+        Expr::Concat { parts } => Expr::Concat {
+            parts: parts
+                .into_iter()
+                .map(|expr| prefix_expr(expr, prefix))
+                .collect(),
+        },
         other => other,
     }
 }
