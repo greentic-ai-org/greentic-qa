@@ -363,6 +363,7 @@ fn to_question_spec(question: &QuestionInput) -> QuestionSpec {
         min_items: list.min_items,
         max_items: list.max_items,
         fields: list.fields.iter().map(to_question_spec).collect::<Vec<_>>(),
+        item_label: None,
     });
 
     serde_json::from_value::<QuestionSpec>(json!({

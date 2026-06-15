@@ -84,4 +84,10 @@ pub struct ListSpec {
     pub max_items: Option<usize>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub fields: Vec<QuestionSpec>,
+    /// Singular noun for the interactive "Add <label>?" row prompt (e.g.
+    /// `"bundle"` ⇒ "Add bundle? / Add another bundle?"). `None` falls back
+    /// to the generic "row". Advisory: front-ends that don't render a
+    /// row-add affordance may ignore it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item_label: Option<String>,
 }

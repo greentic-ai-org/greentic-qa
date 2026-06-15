@@ -58,6 +58,7 @@ fn build_channel_form(min_items: Option<usize>, max_items: Option<usize>) -> For
                 min_items,
                 max_items,
                 fields: vec![channel_field()],
+                item_label: None,
             }),
             computed: None,
             policy: Default::default(),

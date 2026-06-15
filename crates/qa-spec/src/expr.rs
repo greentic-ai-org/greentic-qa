@@ -6,19 +6,58 @@ use serde_json::Value;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "op", rename_all = "snake_case")]
 pub enum Expr {
-    Literal { value: Value },
-    Var { path: String },
-    Answer { path: String },
-    IsSet { path: String },
-    And { expressions: Vec<Expr> },
-    Or { expressions: Vec<Expr> },
-    Not { expression: Box<Expr> },
-    Eq { left: Box<Expr>, right: Box<Expr> },
-    Ne { left: Box<Expr>, right: Box<Expr> },
-    Lt { left: Box<Expr>, right: Box<Expr> },
-    Lte { left: Box<Expr>, right: Box<Expr> },
-    Gt { left: Box<Expr>, right: Box<Expr> },
-    Gte { left: Box<Expr>, right: Box<Expr> },
+    Literal {
+        value: Value,
+    },
+    Var {
+        path: String,
+    },
+    Answer {
+        path: String,
+    },
+    IsSet {
+        path: String,
+    },
+    /// String concatenation of its parts. Each part is evaluated and
+    /// coerced to a string; the whole expression is `None` if any part is
+    /// unset or a structured (array/object) value. Lets a computed default
+    /// build a value from other answers, e.g. `"/" + bundle_id`.
+    Concat {
+        parts: Vec<Expr>,
+    },
+    And {
+        expressions: Vec<Expr>,
+    },
+    Or {
+        expressions: Vec<Expr>,
+    },
+    Not {
+        expression: Box<Expr>,
+    },
+    Eq {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Ne {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Lt {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Lte {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Gt {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Gte {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
 }
 
 impl Expr {
@@ -31,6 +70,17 @@ impl Expr {
             Expr::IsSet { path } => {
                 let present = Self::lookup_answer(ctx, path).is_some();
                 Some(Value::Bool(present))
+            }
+            Expr::Concat { parts } => {
+                let mut out = String::new();
+                for part in parts {
+                    match part.evaluate_value(ctx)? {
+                        Value::String(text) => out.push_str(&text),
+                        Value::Null | Value::Array(_) | Value::Object(_) => return None,
+                        scalar => out.push_str(&scalar.to_string()),
+                    }
+                }
+                Some(Value::String(out))
             }
             Expr::And { expressions } => Self::evaluate_and(expressions, ctx),
             Expr::Or { expressions } => Self::evaluate_or(expressions, ctx),
@@ -189,5 +239,62 @@ impl Expr {
             .filter(|segment| !segment.is_empty())
             .collect::<Vec<_>>();
         format!("/{}", cleaned.join("/"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn concat(parts: Vec<Expr>) -> Expr {
+        Expr::Concat { parts }
+    }
+
+    #[test]
+    fn concat_joins_literal_and_var() {
+        // The motivating case: a route prefix derived from a sibling answer,
+        // e.g. `"/" + bundle_id`.
+        let ctx = json!({ "bundle_id": "legal" });
+        let expr = concat(vec![
+            Expr::Literal { value: json!("/") },
+            Expr::Var {
+                path: "bundle_id".into(),
+            },
+        ]);
+        assert_eq!(expr.evaluate_value(&ctx), Some(json!("/legal")));
+    }
+
+    #[test]
+    fn concat_coerces_scalars_but_rejects_missing_and_structured() {
+        let ctx = json!({ "n": 7, "flag": true, "list": [1], "nested": {"a": 1} });
+        // Numbers / booleans coerce to their textual form.
+        assert_eq!(
+            concat(vec![
+                Expr::Var { path: "n".into() },
+                Expr::Literal { value: json!("-") },
+                Expr::Var {
+                    path: "flag".into()
+                },
+            ])
+            .evaluate_value(&ctx),
+            Some(json!("7-true"))
+        );
+        // A missing part makes the whole concat `None` (no derived value).
+        assert_eq!(
+            concat(vec![Expr::Var {
+                path: "absent".into()
+            }])
+            .evaluate_value(&ctx),
+            None
+        );
+        // Structured parts cannot be concatenated.
+        assert_eq!(
+            concat(vec![Expr::Var {
+                path: "list".into()
+            }])
+            .evaluate_value(&ctx),
+            None
+        );
     }
 }
