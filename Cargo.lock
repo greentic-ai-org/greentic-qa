@@ -262,7 +262,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "component-qa"
-version = "0.4.10"
+version = "0.4.18"
 dependencies = [
  "greentic-types",
  "qa-spec",
@@ -574,7 +574,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-qa"
-version = "0.4.10"
+version = "0.4.18"
 dependencies = [
  "assert_cmd",
  "assert_fs",
@@ -589,7 +589,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-qa-lib"
-version = "0.4.10"
+version = "0.4.18"
 dependencies = [
  "component-qa",
  "qa-spec",
@@ -641,9 +641,9 @@ dependencies = [
 
 [[package]]
 name = "handlebars"
-version = "6.4.0"
+version = "6.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b3f9296c208515b87bd915a2f5d1163d4b3f863ba83337d7713cf478055948e"
+checksum = "f26569a2763497b7bd3fbd19374b774ea6038c5293678771259cd534d49740ff"
 dependencies = [
  "derive_builder",
  "log",
@@ -906,7 +906,7 @@ dependencies = [
 
 [[package]]
 name = "qa-spec"
-version = "0.4.10"
+version = "0.4.18"
 dependencies = [
  "globset",
  "handlebars",
@@ -1106,6 +1106,7 @@ version = "1.0.149"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83fc039473c5595ace860d8c4fafa220ff474b3fc6bfdb4293327f1a37e94d86"
 dependencies = [
+ "indexmap",
  "itoa",
  "memchr",
  "serde",
