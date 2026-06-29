@@ -35,6 +35,7 @@ fn localized_title_is_rendered_with_resolved_map() {
             debug: false,
         },
         verbose: false,
+        env_id: "local".into(),
     })
     .expect("driver should be created");
 

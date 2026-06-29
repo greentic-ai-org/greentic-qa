@@ -55,6 +55,7 @@ fn completes_after_all_required_answers_are_present() {
             debug: false,
         },
         verbose: false,
+        env_id: "local".into(),
     })
     .expect("driver should be created");
 
